@@ -88,3 +88,63 @@ n entradas, h neuronas ocultas, m salidas.
     * `b(2)` es el vector de sesgos de forma (m,).
 
 ### P8. Forward pass con ecuaciones
+z(l) = W(l) * a(l-1) + b(l) a(l) = σ(z(l))
+
+**Flujo (Izquierda→Derecha):** El proceso comienza con las entradas a(0). Para cada capa l, primero calculamos z(l), que es la suma ponderada (multiplicación por pesos W(l)) de las activaciones de la capa anterior a(l-1), más el sesgo b(l). Luego, aplicamos la función de activación σ (sigma) a z(l) para introducir no linealidad y obtener la salida a(l), que se convierte en la entrada para la siguiente capa.
+
+**Si cambias la activación (σ):** Cambias el comportamiento de la red. Si cambias de Sigmoide a ReLU , permites que las activaciones a(l) tomen valores mucho mayores (no están "comprimidas" entre 0 y 1), lo que a menudo acelera el entrenamiento pero puede requerir ajustar la tasa de aprendizaje.
+
+### P9. Backprop sin miedo
+
+En mis palabras: **δ(l) (delta) es el "error local"** de la capa l.
+
+Mide cuánto contribuyó cada neurona de esa capa antes de la activación (en el valor z(l)) al error total de la predicción final. Si δ(l) es grande para una neurona, significa que esa neurona tuvo mucha "culpa" (positiva o negativa) en el error de la red.
+
+Ayuda a saber cuánto cambiar cada peso porque, para calcular el gradiente de un peso W(l), multiplicas el error δ(l) de la neurona de llegada por la activación a(l-1) de la neurona de partida.
+
+### P10. Pérdida y decisión
+
+* **MSE (Mean Squared Error):** Mide la distancia cuadrática promedio entre la predicción y el valor real.
+* **Entropía Cruzada (Cross-Entropy):** Mide el desajuste probabilístico entre la distribución predicha y la distribución real (la "sorpresa").
+
+**Cuándo usar:**
+* Usaría **MSE para Regresión**: cuando predigo un número continuo (ej. el precio de una casa, la temperatura de mañana).
+* Usaría **Entropía Cruzada para Clasificación**: cuando predigo una categoría (ej. spam/no-spam , qué animal hay en una foto ).
+
+### P11. Ejercicio numérico corto (Backprop)
+
+* **Contexto:** La regla de actualización es: `W_nuevo = W_viejo - η * (∂L/∂W)`.
+* **Gradiente:** El gradiente (`∂L/∂W`) es proporcional a `δ_llegada * a_partida`.
+* **Datos:**
+    * Error de llegada: `δ(2)` es negativo (ej. -0.5).
+    * Activación de partida: `a(1)` es grande y positiva (ej. 1.0).
+* **Cálculo:** El gradiente (`∂L/∂W`) ≈ (negativo) * (positivo) = **Negativo** (ej. -0.5).
+* **Actualización:** `W_nuevo = W_viejo - η * (Negativo)`
+    `W_nuevo = W_viejo + (η * Positivo)`
+* **Respuesta:** El peso sube (aumenta).
+* **Razonamiento:** El gradiente negativo indica que la función de pérdida disminuye si el peso aumenta. Por lo tanto, el optimizador (que resta el gradiente) termina sumando un valor.
+
+### P12. Historia express
+
+1.  **1958 (Perceptrón):** Se crea el Perceptrón, la primera neurona artificial que puede aprender. Cambio: Nace la idea, pero se demuestra que es limitada (no puede resolver el XOR ).
+2.  **1986 (Backpropagation):** Se populariza la retropropagación. Cambio: Se proporciona el algoritmo clave para entrenar redes multicapa (MLPs), superando los límites del Perceptrón.
+3.  **2012–2025 (Era DL / ImageNet):** El "Big Bang" del DL (ej. AlexNet gana ImageNet). Cambio: La disponibilidad masiva de GPUs (cómputo paralelo) y Big Data (grandes datasets) permite que las arquitecturas profundas (que ya existían teóricamente) se entrenen eficazmente y superen a todos los métodos clásicos.
+
+### P13. Limitaciones del MLP → CNN
+
+1.  **Ignora la estructura espacial:** Un MLP "aplana" la imagen (ej. 28x28 -> 784x1). Pierde la información de que un píxel está *cerca* de otro. Para un MLP, el píxel (0,0) está igual de relacionado con (0,1) que con (27,27).
+2.  **Exceso de parámetros:** En un MLP denso, cada neurona de la primera capa oculta debe conectarse a *cada* píxel de la imagen. Esto es computacionalmente ineficiente y propenso al sobreajuste.
+
+**Cómo lo resuelven las CNNs:** Las CNNs usan convoluciones, que son filtros pequeños que respetan la localización (miran solo vecindarios de píxeles). Además, comparten pesos (el mismo filtro detector de bordes se usa en toda la imagen), reduciendo drásticamente los parámetros.
+
+### P14. Métrica de éxito y sobreajuste
+
+* **El problema:** Se llama **Sobreajuste (Overfitting)**. El modelo está "memorizando" los datos de entrenamiento (train) perfectamente (por eso su accuracy sube), pero no está aprendiendo a generalizar a datos nuevos (por eso la accuracy de validación baja).
+* **Remedio 1: Regularización.** Añadir Dropout o regularización L2 para penalizar la complejidad del modelo y forzarlo a generalizar.
+* **Remedio 2: Data Augmentation.** Generar más datos de entrenamiento (ej. rotando, recortando o cambiando el color de las imágenes) para que el modelo tenga más variedad y no pueda memorizar tan fácilmente. (Otros remedios válidos: Early Stopping o simplificar la red).
+
+### P15. Mini-resumen personal
+
+* **Qué entendí hoy:** Entendí el flujo completo del MLP: cómo los datos fluyen (forward) , cómo se mide el error (pérdida) , y cómo ese error se usa para ajustar los pesos (backprop).
+* **Qué me falta:** Me falta la intuición práctica de cómo depurar una red que no aprende. ¿Es el learning rate? ¿La inicialización de pesos? ¿O es que los datos no sirven?
+* **Ejemplo real donde lo aplicaría:** Usaría un MLP para un problema de clasificación tabular. Por ejemplo, predecir si un cliente abandonará un servicio (churn) basándome en sus datos no-estructurados (tiempo de uso, tipo de plan, tickets de soporte), donde una CNN o Transformer no aplicarían directamente.
